@@ -37,7 +37,7 @@ class LMMentorBot:
 
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-        os.environ["LANGCHAIN_API_KEY"] = st.secrets["LANGCHAIN_API_KEY"]
+        os.environ["LANGCHAIN_API_KEY"] = st.secrets["langchain"]["api_key"]
 
         client = Client()
 
@@ -49,9 +49,9 @@ class LMMentorBot:
         dummy_retriever = retriever.retriever_dummy
 
         print("Initializing LLM")
-        llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["OPENAI_KEY"], streaming=True)
-        audit_summary_llm = ChatAnthropic(temperature=0.7, model="claude-3-5-sonnet-20240620", api_key=st.secrets["ANTHROPIC_KEY"])
-        dummy_llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["OPENAI_KEY"], max_tokens=1)
+        llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["api_keys"]["OPENAI_API_KEY"], streaming=True)
+        audit_summary_llm = ChatAnthropic(temperature=0.7, model="claude-3-5-sonnet-20240620", api_key=st.secrets["api_keys"]["ANTHROPIC_API_KEY"])
+        dummy_llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["api_keys"]["OPENAI_API_KEY"], max_tokens=1)
 
         # 
         with open("retriever_prompt.txt", "r") as f:

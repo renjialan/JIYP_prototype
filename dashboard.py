@@ -8,24 +8,24 @@ from typing import AsyncGenerator
 
 
 st.set_page_config(
-    page_title="Tara", 
-    page_icon=":sparkles:", 
+    page_title="Jeeves", 
+    page_icon=":avocado:", 
     layout="centered")
-st.title("✨ Talk to Tara - University of Michigan")
+st.title("🥑 JIYP - Live better eat better")
 
 with st.sidebar:
-    st.header("Meet Tara or your Tailored Academic & Resource Assistant!")
-    st.write("To get started you can either start chatting with Tara or simply upload your Degree Audit Checklist or Report pdf.")
-    st.info("Download Audit from: Wolverine Access > Backpack > My Academics > View My Advisement Report > Checklist Report PDF.")
+    st.header("Meet Jeeves, your health assistant!")
+    st.write("To get started you can either start chatting with Jeeves or simply upload your personal information form pdf.")
+    st.info("Tell Jeeves about your demographic, dietary restrictions, allergies, preferences, and conditions.")
     st.divider()
-    st.write("Tara can help you with:")
-    st.write("- Degree Audit Summary and Breakdown")
-    st.write("- Course Recommendations")
-    st.write("- Resources for Academic Success")
+    st.write("Jeeves can help you with:")
+    st.write("- Calorie tracking")
+    st.write("- Meal planning")
+    st.write("- Recipe recommendations")
     st.divider()
     with st.expander("Disclaimer", icon ="⚠️"):
-        st.markdown("Tara is a virtual assistant and is **not** a replacement for academic advisors. Please consult with your academic advisor for official advice.")
-        st.write("Tara does not store any personal information, any feedback is anonymous.")
+        st.markdown("Jeeves is a virtual assistant and is **not** a replacement for health professionals. Please consult with your doctor for official advice.")
+        st.write("Jeeves does not store any personal information, any feedback is anonymous.")
 
 
 # Initialize chat bot
@@ -41,16 +41,16 @@ if "degree_audit" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-uploaded_file = st.file_uploader("Upload your Degree Audit here:", type=["pdf"], accept_multiple_files=False)
+uploaded_file = st.file_uploader("Upload your document here:", type=["pdf"], accept_multiple_files=False)
 # add file drop
 # Streamed response emulator
 # Display chat messages from history
 for message in st.session_state.messages:
     avatar = None
     if message["role"] == "user":
-        avatar = "🧑‍🎓"
+        avatar = "🧑‍💻"
     else:
-        avatar = "✨"
+        avatar = "🥑"
         
     with st.chat_message(message["role"], avatar=avatar):
         st.empty()
@@ -63,19 +63,31 @@ if uploaded_file is None:
 def send_user_input(prompt:str):
     button_holder.empty()
 
-    with st.chat_message("user", avatar="🧑‍🎓"):
+    with st.chat_message("user", avatar="🧑‍💻"):
         st.markdown(prompt)
     
     # add to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     # call response generator
-    with st.chat_message("assistant", avatar="✨"):
+    with st.chat_message("assistant", avatar="🥑"):
         with st.spinner("Thinking..."):
             response = st.write_stream(st.session_state.chatBot.chat_stream(prompt))
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     
+    # Log the interaction to Google Sheets
+    try:
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        append_values(
+            st.secrets["google_sheets"]["spreadsheet_id"],
+            f"{st.secrets['google_sheets']['sheet_name']}!A1:D1",
+            "USER_ENTERED",
+            [[timestamp, "Query", prompt, response]]
+        )
+    except Exception as e:
+        print(f"Failed to log interaction: {e}")
+
 button_holder = st.empty()
 
 if len(st.session_state.messages) != 0:
@@ -83,45 +95,52 @@ if len(st.session_state.messages) != 0:
 else:
     with button_holder.container():   
         st.write("Click on a prompt to get started, or start chatting below:")
-        but_a = st.button("Hi Tara, what can you do?")
-        but_b = st.button("Can you tell me what requirements I have left?")
-        but_c = st.button("I'm having trouble planning my courses")
+        but_a = st.button("Hi Jeeves, what can you do?")
+        but_b = st.button("What should I eat for lunch today?")
+        but_c = st.button("Help me plan a high-protein low carb day tomorrow")
 
     if but_a:
-        send_user_input("Hi Tara, what can you do?")
+        send_user_input("Hi Jeeves, what can you do?")
     elif but_b:
-        send_user_input("Can you tell me what requirements I have left?")
+        send_user_input("What should I eat for lunch today?")
     elif but_c:
-        send_user_input("I'm having trouble planning my courses")
+        send_user_input("Help me plan a high-protein low carb day tomorrow")
 
 
 if uploaded_file is not None and st.session_state.degree_audit == False:
     audit_text = extract_text_fromaudit(uploaded_file)
-    with st.chat_message("user", avatar="🧑‍🎓"):
-        st.markdown("*You uploaded your degree audit*")
+    with st.chat_message("user", avatar="🧑‍💻"):
+        st.markdown("*You uploaded your information*")
     
     if audit_text == "":
         st.error("Error extracting text from PDF. Please try again.")
-        # st.stop()
     if audit_text == "Invalid PDF":
-        st.error("This doesn't look like a degree audit. Please try again.")
-        # st.stop()
+        st.error("This doesn't look like a personal information form. Please try again.")
 
-
-    with st.chat_message("assistant", avatar="✨"):
-        with st.spinner("Analyzing your Degree Audit..."):
+    with st.chat_message("assistant", avatar="🥑"):
+        with st.spinner("Analyzing your document..."):
             response = st.write_stream(st.session_state.chatBot.upload_degree_audit(audit_text))
     
-    
     # add to chat history
-    st.session_state.messages.append({"role": "user", "content": "*You uploaded your degree audit*"})
-
+    st.session_state.messages.append({"role": "user", "content": "*You uploaded your document*"})
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.session_state.degree_audit = True
 
+    # Log the audit upload interaction
+    try:
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        append_values(
+            st.secrets["google_sheets"]["spreadsheet_id"],
+            f"{st.secrets['google_sheets']['sheet_name']}!A1:D1",
+            "USER_ENTERED",
+            [[timestamp, "Document Upload", "Document Uploaded", response]]
+        )
+    except Exception as e:
+        print(f"Failed to log audit upload: {e}")
+
 
 # Get user input
-if prompt := st.chat_input("What classes should I take if I want to become...?"):
+if prompt := st.chat_input("Help me track calories, these apps are too hard! I just had a banana and greek yogurt"):
     # Display user message
     send_user_input(prompt)
 
@@ -137,5 +156,14 @@ if selected is not None:
         sentiment = "Negative"
     else:
         sentiment = "Positive"
-    append_values("1WAuUGd130tEnsjFzaYy7Tgq5H3zh-vvp7WXlg9WPNAs", "Sheet1!A1:C1", "USER_ENTERED", [["Session id: Test", str(st.session_state.messages), sentiment]])
+    try:
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        append_values(
+            st.secrets["google_sheets"]["spreadsheet_id"],
+            f"{st.secrets['google_sheets']['sheet_name']}!A1:E1",
+            "USER_ENTERED",
+            [[timestamp, "Feedback", str(st.session_state.messages), sentiment, "Session End"]]
+        )
+    except Exception as e:
+        print(f"Failed to log feedback: {e}")
     st.success("Thank you for your feedback!")

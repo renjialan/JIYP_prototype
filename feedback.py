@@ -1,69 +1,65 @@
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
 import json
 import streamlit as st
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-token_data = {
-    "token": st.secrets["oauth2"]["token"],
-    "refresh_token": st.secrets["oauth2"]["refresh_token"],
-    "token_uri": st.secrets["oauth2"]["token_uri"],
-    "client_id": st.secrets["oauth2"]["client_id"],
-    "client_secret": st.secrets["oauth2"]["client_secret"],
-    "scopes": ["https://www.googleapis.com/auth/spreadsheets"],
-    "universe_domain": "googleapis.com",
-    "account": "",
-    "expiry": "2024-08-06T08:36:06.391636Z",
-}
-
-json_data = json.dumps(token_data)
-json_data = json.loads(json_data)
-
 def append_values(spreadsheet_id, range_name, value_input_option, _values):
-  creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
-  # created automatically when the authorization flow completes for the first
-  # time.
-  #creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-  print(json_data)
-  creds = Credentials.from_authorized_user_info(json_data)
-  """
-  Creates the batch_update the user has access to.
-  Load pre-authorized user credentials from the environment.
-  TODO(developer) - See https://developers.google.com/identity
-  for guides on implementing OAuth2 for the application.
-  """
-  # creds, _ = google.auth.default()
-  # pylint: disable=maybe-no-member
-  try:
-    service = build("sheets", "v4", credentials=creds)
-
-    values = [
-        [
-            # Cell values ...
-        ],
-        # Additional rows ...
-    ]
-    body = {"values": _values}
-    result = (
-        service.spreadsheets()
-        .values()
-        .append(
-            spreadsheetId=spreadsheet_id,
-            range=range_name,
-            valueInputOption=value_input_option,
-            body=body,
+    try:
+        print("Starting Google Sheets append operation...")
+        print(f"Spreadsheet ID: {spreadsheet_id}")
+        print(f"Range: {range_name}")
+        print(f"Values to append: {_values}")
+        
+        # Parse the service account credentials from secrets
+        credentials_dict = json.loads(st.secrets["api_keys"]["GOOGLE_CREDENTIALS"])
+        print(f"Service account email: {credentials_dict.get('client_email')}")
+        print(f"Project ID: {credentials_dict.get('project_id')}")
+        print(f"Private key ID: {credentials_dict.get('private_key_id')}")
+        
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_dict,
+            scopes=SCOPES
         )
-        .execute()
-    )
-    print(f"{(result.get('updates').get('updatedCells'))} cells appended.")
-    return result
+        print(f"Credentials valid: {credentials.valid}")
+        print(f"Credentials scopes: {credentials.scopes}")
 
-  except HttpError as error:
-    print(f"An error occurred: {error}")
-    return error
+        service = build("sheets", "v4", credentials=credentials)
+        print("Successfully built Google Sheets service")
+
+        # Test if we can read the spreadsheet first
+        try:
+            print("Testing spreadsheet access...")
+            spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+            print(f"Successfully accessed spreadsheet: {spreadsheet.get('properties', {}).get('title')}")
+        except HttpError as e:
+            print(f"Failed to access spreadsheet: {e}")
+            raise
+
+        body = {"values": _values}
+        print("Sending request to Google Sheets API...")
+        result = (
+            service.spreadsheets()
+            .values()
+            .append(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                valueInputOption=value_input_option,
+                body=body,
+            )
+            .execute()
+        )
+        print(f"Successfully appended {result.get('updates', {}).get('updatedCells', 0)} cells")
+        return result
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        print(f"Error details: {error.error_details}")
+        print(f"Error status: {error.status_code}")
+        print(f"Error content: {error.content}")
+        raise error
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        raise e
 
