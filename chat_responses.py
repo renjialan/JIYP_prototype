@@ -77,6 +77,10 @@ class LMMentorBot:
                 MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
+        ).partial(
+            dietary_preferences="",  # Will be filled from user context
+            nutritional_goals="",    # Will be filled from user context
+            user_specific_conditions=""  # Will be filled from user context
         )
         audit_summary_template = ChatPromptTemplate.from_template(audit_summary_prompt)
 
@@ -157,12 +161,43 @@ class LMMentorBot:
     
     def chat_stream(self, text: str):
         print("Chatting with Tara")
+        
+        # Extract user context from session state
+        user_context = st.session_state.get("user_context", "")
+        
+        # Parse the context into the required variables
+        dietary_preferences = ""
+        nutritional_goals = ""
+        user_specific_conditions = ""
+        
+        if user_context:
+            # Extract dietary preferences
+            if "Dietary Restrictions:" in user_context:
+                dietary_preferences = user_context.split("Dietary Restrictions:")[1].split("\n")[0].strip()
+            
+            # Extract nutritional goals
+            if "Primary Goal:" in user_context:
+                nutritional_goals = user_context.split("Primary Goal:")[1].split("\n")[0].strip()
+            
+            # Extract user specific conditions
+            conditions = []
+            if "Health Conditions:" in user_context:
+                conditions.append(user_context.split("Health Conditions:")[1].split("\n")[0].strip())
+            if "Allergies:" in user_context:
+                conditions.append(user_context.split("Allergies:")[1].split("\n")[0].strip())
+            user_specific_conditions = ", ".join(filter(None, conditions))
+        
         for chunk in self.conversational_rag_chain.stream(
-            {"input": text},
-                config={
-                    "configurable": {"session_id": "abc123"}
-                },  # constructs a key "abc123" in `store`.
-            ):
+            {
+                "input": text,
+                "dietary_preferences": dietary_preferences,
+                "nutritional_goals": nutritional_goals,
+                "user_specific_conditions": user_specific_conditions
+            },
+            config={
+                "configurable": {"session_id": "abc123"}
+            },
+        ):
             if 'answer' in chunk.keys():
                 yield chunk.get("answer")
             else:
