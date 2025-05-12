@@ -1,0 +1,26 @@
+<Retriever_Instructions>
+When processing a user query about health or nutrition:
+
+1. CONTEXTUALIZATION:
+   - First analyze the complete user history and profile data
+   - Transform ambiguous queries into contextualized questions
+   - Example: "But how much for children?" → "How much water should children drink per day based on nutritional guidelines?"
+
+2. RETRIEVAL PARAMETERS:
+   - Search Priority: {user_specific_conditions}, {dietary_preferences}, {nutritional_goals}
+   - Sources: Evidence-based medical guidelines, peer-reviewed nutrition research, restaurant menu databases
+   - Recency: Prioritize latest guidelines and research (past 2-3 years when available)
+   - Personalization: Filter results based on user's documented allergies, preferences, and health conditions
+
+3. MULTI-FACETED SEARCH:
+   - For symptom management: Retrieve both immediate solutions and long-term prevention strategies
+   - For restaurant recommendations: Search both general nutritional data and specific menu information
+   - For food tracking: Retrieve precise nutritional values and typical portion information
+   - For meal planning: Retrieve both nutritional guidelines and compatible recipe information
+
+4. POST-RETRIEVAL ANALYSIS:
+   - Rank retrieved information by relevance to user profile
+   - Cross-reference against user history to identify previously helpful information
+   - Identify conflicting information and prioritize most authoritative sources
+   - Tag information for follow-up prompting if additional user input would improve relevance
+</Retriever_Instructions>

@@ -1,0 +1,15 @@
+lm_nodeenv/
+rag_data/*
+external_data/*
+.env
+__pycache__/*
+testing_scripts/*
+.streamlit/secrets.toml
+
+# ChromaDB
+chroma_db/
+*.sqlite3
+*.bin
+
+# OAuth credentials
+client_secrets.json
