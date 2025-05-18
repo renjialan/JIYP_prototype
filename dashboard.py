@@ -2,10 +2,34 @@ import os
 import streamlit as st
 from chat_responses import LMMentorBot
 from audit_parse import extract_text_fromaudit
-from feedback import append_values
+from feedback import append_values, log_interaction, log_feedback
 import asyncio
 from typing import AsyncGenerator
-from auth import Authenticator
+import toml
+
+# Load secrets
+secrets = toml.load(".streamlit/secrets.toml")
+ALLOWED_USERS = secrets["auth"]["allowed_users"].split(",")
+
+def check_auth():
+    """Simple email-based authentication"""
+    if 'user_email' not in st.session_state:
+        st.session_state.user_email = None
+        st.session_state.user_info = None
+    
+    if st.session_state.user_email is None:
+        st.text_input("Enter your email to continue:", key="email_input")
+        if st.button("Login"):
+            email = st.session_state.email_input.strip().lower()
+            if email in ALLOWED_USERS:
+                st.session_state.user_email = email
+                st.session_state.user_info = {"email": email}
+                st.rerun()
+            else:
+                st.error("Unauthorized email. Please contact support if you believe this is an error.")
+                return False
+        return False
+    return True
 
 # Set page config first - this must be the first Streamlit command
 st.set_page_config(
@@ -20,32 +44,15 @@ st.set_page_config(
     }
 )
 
-# Force using production URL for testing
-redirect_uri = "https://jiyp-proto.streamlit.app/_stcore/streamlit_oauth2_callback"
-
-# Initialize authentication
-authenticator = Authenticator(
-    allowed_users=st.secrets["auth"]["allowed_users"].split(","),
-    token_key=st.secrets["auth"]["token_key"],
-    secret_path="client_secrets.json",
-    redirect_uri=redirect_uri,
-)
-
 # Check authentication
-authenticator.check_auth()
-
-# Show login if not authenticated
-if not st.session_state.get("connected"):
-    st.title("Welcome to Jeeves")
-    st.write("Please log in to access the application")
-    authenticator.login()
+if not check_auth():
     st.stop()
 
 # Main app content - only shown if authenticated
 st.title("🥑 JIYP - Live better eat better")
 
 with st.sidebar:
-    st.header("Meet Jeeves, your health assistant!")
+    st.header("Meet Jarvis In Your Pocket, your health assistant!")
     
     # Add demographic information form
     with st.form("demographic_info"):
@@ -98,18 +105,19 @@ with st.sidebar:
             st.success("Information updated successfully!")
 
     st.divider()
-    st.write("Jeeves can help you with:")
+    st.write("Jarvis can help you with:")
     st.write("- Calorie tracking")
     st.write("- Meal planning")
     st.write("- Recipe recommendations")
     st.divider()
     with st.expander("Disclaimer", icon ="⚠️"):
-        st.markdown("Jeeves is a virtual assistant and is **not** a replacement for health professionals. Please consult with your doctor for official advice.")
-        st.write("Jeeves does not store any personal information, any feedback is anonymous.")
+        st.markdown("Jarvis is a virtual assistant and is **not** a replacement for health professionals. Please consult with your doctor for official advice.")
+        st.write("Jarvis does not store any personal information, any feedback is anonymous.")
     
     # Add logout button
     if st.button("Logout"):
-        authenticator.logout()
+        st.session_state.user_email = None
+        st.session_state.user_info = None
         st.rerun()
 
 # Initialize chat bot
@@ -130,7 +138,7 @@ for message in st.session_state.messages:
     if message["role"] == "user":
         avatar = "🧑‍💻"
     else:
-        avatar = "��"
+        avatar = "🥑"
         
     with st.chat_message(message["role"], avatar=avatar):
         st.empty()
@@ -154,8 +162,11 @@ def send_user_input(prompt:str):
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     
-    # Log the interaction to Google Sheets
-    log_interaction(prompt, response)
+    # Log the interaction using the proper logging function
+    try:
+        log_interaction(prompt, response)
+    except Exception as e:
+        print(f"Failed to log interaction: {e}")
 
 button_holder = st.empty()
 
@@ -180,17 +191,7 @@ if prompt := st.chat_input("Help me track calories, these apps are too hard! I j
     # Display user message
     send_user_input(prompt)
 
-# Log the audit upload interaction
-try:
-    log_interaction(
-        "User uploaded personal information",
-        response,
-        interaction_type="Document Upload",
-        feedback_status="No Feedback"
-    )
-except Exception as e:
-    print(f"Failed to log audit upload: {e}")
-
+# Feedback component
 selected = st.feedback("thumbs")
 if selected is not None:
     sentiment = "Negative" if selected == 0 else "Positive"

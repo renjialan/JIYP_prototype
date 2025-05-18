@@ -1,10 +1,10 @@
+import sys
 from datetime import datetime, timedelta
-import jwt
-from jwt import ExpiredSignatureError
 import streamlit as st
 import extra_streamlit_components as stx
 import logging
 import os
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +29,19 @@ class AuthTokenManager:
         if self.token is None:
             logger.info("No token found in cookies")
             return None
-        self.token = self._decode_token()
-        return self.token
+        return self._decode_token()
 
     def set_token(self, email: str, oauth_id: str):
         logger.info(f"Setting token for user: {email}")
         exp_date = (
             datetime.now() + timedelta(days=self.token_duration_days)
         ).timestamp()
-        token = self._encode_token(email, oauth_id, exp_date)
+        token_data = {
+            "email": email,
+            "oauth_id": oauth_id,
+            "exp": exp_date
+        }
+        token = json.dumps(token_data)
         
         # Determine if we're in local development
         is_local = os.environ.get("STREAMLIT_SERVER_PORT") == "8501"
@@ -73,28 +77,14 @@ class AuthTokenManager:
     def _decode_token(self) -> str:
         try:
             logger.info("Decoding token")
-            decoded = jwt.decode(self.token, self.token_key, algorithms=["HS256"])
+            decoded = json.loads(self.token)
+            if datetime.fromtimestamp(decoded["exp"]) < datetime.now():
+                logger.warning("Token has expired")
+                st.toast(":red[token expired, please login]")
+                self.delete_token()
+                return None
             logger.info("Token decoded successfully")
-            st.write("Decoded token:", decoded)  # Debug output
             return decoded
-        except ExpiredSignatureError:
-            logger.warning("Token has expired")
-            st.toast(":red[token expired, please login]")
-            self.delete_token()
         except Exception as e:
             logger.error(f"Error decoding token: {str(e)}", exc_info=True)
-            raise
-
-    def _encode_token(self, email: str, oauth_id: str, exp_date: float) -> str:
-        try:
-            logger.info(f"Encoding token for user: {email}")
-            encoded = jwt.encode(
-                {"email": email, "oauth_id": oauth_id, "exp": exp_date},
-                self.token_key,
-                algorithm="HS256",
-            )
-            logger.info("Token encoded successfully")
-            return encoded
-        except Exception as e:
-            logger.error(f"Error encoding token: {str(e)}", exc_info=True)
             raise 
