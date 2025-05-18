@@ -33,15 +33,11 @@ class LMMentorBot:
 
     def __init__(self):
 
-        print("Starting Tara Assisstant -----------------------------------###")
+        print("Starting Jeeves Assistant -----------------------------------###")
 
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-<<<<<<< HEAD
-        os.environ["LANGCHAIN_API_KEY"] = st.secrets["LANGCHAIN_API_KEY"]
-=======
         os.environ["LANGCHAIN_API_KEY"] = st.secrets["langchain"]["api_key"]
->>>>>>> new-main
 
         client = Client()
 
@@ -53,15 +49,9 @@ class LMMentorBot:
         dummy_retriever = retriever.retriever_dummy
 
         print("Initializing LLM")
-<<<<<<< HEAD
-        llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["OPENAI_KEY"], streaming=True)
-        audit_summary_llm = ChatAnthropic(temperature=0.7, model="claude-3-5-sonnet-20240620", api_key=st.secrets["ANTHROPIC_KEY"])
-        dummy_llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["OPENAI_KEY"], max_tokens=1)
-=======
         llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["api_keys"]["OPENAI_API_KEY"], streaming=True)
         audit_summary_llm = ChatAnthropic(temperature=0.7, model="claude-3-5-sonnet-20240620", api_key=st.secrets["api_keys"]["ANTHROPIC_API_KEY"])
         dummy_llm = ChatOpenAI(temperature=0.7, model= "gpt-4o-mini-2024-07-18", api_key=st.secrets["api_keys"]["OPENAI_API_KEY"], max_tokens=1)
->>>>>>> new-main
 
         # 
         with open("retriever_prompt.txt", "r") as f:
@@ -87,13 +77,10 @@ class LMMentorBot:
                 MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
-<<<<<<< HEAD
-=======
         ).partial(
             dietary_preferences="",  # Will be filled from user context
             nutritional_goals="",    # Will be filled from user context
             user_specific_conditions=""  # Will be filled from user context
->>>>>>> new-main
         )
         audit_summary_template = ChatPromptTemplate.from_template(audit_summary_prompt)
 
@@ -162,7 +149,7 @@ class LMMentorBot:
         print(self.store["abc123"])
 
     def chat(self, text: str) -> str:
-        print("Chatting with Tara")
+        print("Chatting with Jeeves")
         response = self.conversational_rag_chain.invoke(
             {"input": text},
                 config={
@@ -173,15 +160,7 @@ class LMMentorBot:
         return response
     
     def chat_stream(self, text: str):
-        print("Chatting with Tara")
-<<<<<<< HEAD
-        for chunk in self.conversational_rag_chain.stream(
-            {"input": text},
-                config={
-                    "configurable": {"session_id": "abc123"}
-                },  # constructs a key "abc123" in `store`.
-            ):
-=======
+        print("Chatting with Jeeves")
         
         # Extract user context from session state
         user_context = st.session_state.get("user_context", "")
@@ -219,7 +198,6 @@ class LMMentorBot:
                 "configurable": {"session_id": "abc123"}
             },
         ):
->>>>>>> new-main
             if 'answer' in chunk.keys():
                 yield chunk.get("answer")
             else:

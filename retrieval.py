@@ -24,11 +24,7 @@ class Retriever:
         new_client = chromadb.PersistentClient(path = "./chroma_db", tenant = DEFAULT_TENANT, database = DEFAULT_DATABASE, settings = Settings())
 
         embeddings = VoyageAIEmbeddings(
-<<<<<<< HEAD
-            voyage_api_key=st.secrets["VOYAGEAI_KEY"] , model="voyage-large-2-instruct")
-=======
             voyage_api_key=st.secrets["voyageai"]["api_key"], model="voyage-large-2-instruct")
->>>>>>> new-main
         
         dummyEmbeddings = MyEmbeddings(model="dummy")
 
