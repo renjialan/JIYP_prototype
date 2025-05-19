@@ -29,14 +29,14 @@ def check_auth():
 
 # Set page config first - this must be the first Streamlit command
 st.set_page_config(
-    page_title="Tara", 
+    page_title="Jarvis", 
     page_icon=":avocado:", 
     layout="centered",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://www.extremelycoolapp.com/help',
         'Report a bug': "https://www.extremelycoolapp.com/bug",
-        'About': "# Tara - Your Academic Assistant\n\nTara is your AI-powered academic assistant, helping you plan your academic journey and make better course choices. Get personalized course recommendations, track your degree progress, and receive expert guidance on your academic path."
+        'About': "# Jarvis - Your Health Assistant\n\nJarvis is your AI-powered health and nutrition assistant, helping you make better food choices and live a healthier lifestyle. Get personalized meal plans, track your nutrition, and receive expert guidance on your health journey."
     }
 )
 
@@ -45,10 +45,10 @@ if not check_auth():
     st.stop()
 
 # Main app content - only shown if authenticated
-st.title("📚 Tara - Your Academic Guide")
+st.title("🥑 Jarvis - Live better eat better")
 
 with st.sidebar:
-    st.header("Meet Tara, your academic assistant!")
+    st.header("Meet Jarvis, your health assistant!")
     
     # Add PDF upload to sidebar
     st.title("Upload PDF")
@@ -120,14 +120,14 @@ with st.sidebar:
             st.success("Information updated successfully!")
 
     st.divider()
-    st.write("Tara can help you with:")
-    st.write("- Course planning")
-    st.write("- Degree requirements")
-    st.write("- Academic advising")
+    st.write("Jarvis can help you with:")
+    st.write("- Calorie tracking")
+    st.write("- Meal planning")
+    st.write("- Recipe recommendations")
     st.divider()
     with st.expander("Disclaimer", icon ="⚠️"):
-        st.markdown("Tara is a virtual assistant and is **not** a replacement for academic advisors. Please consult with your academic advisor for official advice.")
-        st.write("Tara does not store any personal information, any feedback is anonymous.")
+        st.markdown("Jarvis is a virtual assistant and is **not** a replacement for health professionals. Please consult with your doctor for official advice.")
+        st.write("Jarvis does not store any personal information, any feedback is anonymous.")
     
     # Add logout button
     if st.button("Logout"):
@@ -190,16 +190,16 @@ if len(st.session_state.messages) != 0:
 else:
     with button_holder.container():   
         st.write("Click on a prompt to get started, or start chatting below:")
-        but_a = st.button("Hi Tara, what can you do?")
-        but_b = st.button("What courses should I take next semester?")
-        but_c = st.button("Help me plan my degree requirements")
+        but_a = st.button("Hi Jarvis, what can you do?")
+        but_b = st.button("What should I eat for lunch today?")
+        but_c = st.button("Help me plan a high-protein low carb day tomorrow")
 
     if but_a:
-        send_user_input("Hi Tara, what can you do?")
+        send_user_input("Hi Jarvis, what can you do?")
     elif but_b:
-        send_user_input("What courses should I take next semester?")
+        send_user_input("What should I eat for lunch today?")
     elif but_c:
-        send_user_input("Help me plan my degree requirements")
+        send_user_input("Help me plan a high-protein low carb day tomorrow")
 
 # Get user input
 if prompt := st.chat_input("Help me track calories, these apps are too hard! I just had a banana and greek yogurt"):
