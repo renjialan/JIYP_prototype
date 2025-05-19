@@ -21,13 +21,9 @@ def check_auth():
         st.text_input("Enter your email to continue:", key="email_input")
         if st.button("Login"):
             email = st.session_state.email_input.strip().lower()
-            if email in ALLOWED_USERS:
-                st.session_state.user_email = email
-                st.session_state.user_info = {"email": email}
-                st.rerun()
-            else:
-                st.error("Unauthorized email. Please contact support if you believe this is an error.")
-                return False
+            st.session_state.user_email = email
+            st.session_state.user_info = {"email": email}
+            st.rerun()
         return False
     return True
 
