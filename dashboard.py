@@ -76,8 +76,8 @@ with st.sidebar:
         # Basic Information
         age = st.number_input("Age", min_value=18, max_value=100, value=25)
         gender = st.selectbox("Gender", ["Male", "Female"])
-        weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
-        height = st.number_input("Height (cm)", min_value=100, max_value=250, value=170)
+        weight = st.number_input("Weight (lbs)", min_value=66.0, max_value=440.0, value=154.0)
+        height = st.number_input("Height (inches)", min_value=39, max_value=98, value=67)
         
         # Health Information
         st.subheader("Health Information")
@@ -108,8 +108,8 @@ with st.sidebar:
             User Profile:
             - Age: {age}
             - Gender: {gender}
-            - Weight: {weight} kg
-            - Height: {height} cm
+            - Weight: {weight} lbs
+            - Height: {height} inches
             - Dietary Restrictions: {', '.join(dietary_restrictions)}
             - Allergies: {allergies}
             - Health Conditions: {health_conditions}
